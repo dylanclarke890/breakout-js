@@ -19,7 +19,7 @@ function randUpTo(num, floor = false) {
 
 class Paddle {
   constructor() {
-    const { w, h } = settings.paddleSize;
+    const { w, h } = settings.paddle;
     this.x = canvas.width / 2 - w / 2;
     this.y = canvas.height - h * 3;
     this.w = w;
@@ -41,15 +41,40 @@ class Paddle {
   }
 }
 
+class Brick {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    const { w, h } = settings.bricks;
+    this.w = w;
+    this.h = h;
+  }
+}
+
 const [canvas, ctx] = new2dCanvas("play-area", 800, 500);
 
 const settings = {
-  paddleSize: {
+  bricks: {
+    w: 10,
+    h: 5,
+  },
+  paddle: {
     w: 80,
     h: 20,
   },
   movementSpeed: 10,
 };
+
+const levels = [
+  [
+    [
+      Math.floor((Math.random() * canvas.width) / settings.bricks.w) *
+        settings.bricks.w,
+      Math.floor((Math.random() * canvas.height) / settings.bricks.h) *
+        settings.bricks.h,
+    ],
+  ],
+];
 
 const state = {
   paddle: new Paddle(),
@@ -58,6 +83,8 @@ const state = {
     left: false,
     right: false,
   },
+  bricks: [],
+  nextLevel: 0,
 };
 
 window.addEventListener("keydown", (e) => {
@@ -88,13 +115,24 @@ window.addEventListener("keyup", (e) => {
   }
 });
 
+(function handleLevelSetUp() {
+  const level = levels[state.nextLevel++];
+  state.bricks = [];
+  level.forEach((brick) => {
+    state.bricks.push(new Brick(brick[0], brick[1]));
+  });
+})();
+
 function handlePaddle() {
   state.paddle.update();
   state.paddle.draw();
 }
 
+function handleBricks() {}
+
 (function animate() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   handlePaddle();
+  handleBricks();
   if (!state.over) requestAnimationFrame(animate);
 })();
