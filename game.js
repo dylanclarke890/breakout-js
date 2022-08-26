@@ -61,8 +61,8 @@ const [canvas, ctx] = new2dCanvas("play-area", 800, 500);
 
 const settings = {
   bricks: {
-    w: 20,
-    h: 10,
+    w: 40,
+    h: 20,
   },
   paddle: {
     w: 80,
@@ -73,12 +73,11 @@ const settings = {
 
 const levels = [
   [
-    [
-      Math.floor((Math.random() * canvas.width) / settings.bricks.w) *
-        settings.bricks.w,
-      Math.floor((Math.random() * (canvas.height - 200)) / settings.bricks.h) *
-        settings.bricks.h,
-    ],
+    [0, 1, true],
+    [1, 2, true],
+    [5, 8, true],
+    [12, 3, true],
+    [15, 14, true],
   ],
 ];
 
@@ -125,8 +124,10 @@ window.addEventListener("keyup", (e) => {
   const level = levels[state.nextLevel++];
   state.bricks = [];
   level.forEach((brick) => {
-    console.log(brick);
-    state.bricks.push(new Brick(brick[0], brick[1]));
+    const relative = brick[2];
+    const x = relative ? brick[0] * settings.bricks.w : brick[0];
+    const y = relative ? brick[1] * settings.bricks.h : brick[1];
+    state.bricks.push(new Brick(x, y));
   });
 })();
 
