@@ -49,14 +49,20 @@ class Brick {
     this.w = w;
     this.h = h;
   }
+
+  update() {}
+  draw() {
+    ctx.fillStyle = "white";
+    ctx.fillRect(this.x, this.y, this.w, this.h);
+  }
 }
 
 const [canvas, ctx] = new2dCanvas("play-area", 800, 500);
 
 const settings = {
   bricks: {
-    w: 10,
-    h: 5,
+    w: 20,
+    h: 10,
   },
   paddle: {
     w: 80,
@@ -70,7 +76,7 @@ const levels = [
     [
       Math.floor((Math.random() * canvas.width) / settings.bricks.w) *
         settings.bricks.w,
-      Math.floor((Math.random() * canvas.height) / settings.bricks.h) *
+      Math.floor((Math.random() * (canvas.height - 200)) / settings.bricks.h) *
         settings.bricks.h,
     ],
   ],
@@ -119,6 +125,7 @@ window.addEventListener("keyup", (e) => {
   const level = levels[state.nextLevel++];
   state.bricks = [];
   level.forEach((brick) => {
+    console.log(brick);
     state.bricks.push(new Brick(brick[0], brick[1]));
   });
 })();
@@ -128,7 +135,12 @@ function handlePaddle() {
   state.paddle.draw();
 }
 
-function handleBricks() {}
+function handleBricks() {
+  for (let i = 0; i < state.bricks.length; i++) {
+    state.bricks[i].update();
+    state.bricks[i].draw();
+  }
+}
 
 (function animate() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
