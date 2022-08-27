@@ -259,6 +259,7 @@ function handleGameState() {
     state.ball.y = canvas.height - 80;
     state.paddle.x = canvas.width / 2 - state.paddle.w / 2;
     state.started = false;
+    state.over = state.level.lives === 0;
   }
 
   if (!state.started)
