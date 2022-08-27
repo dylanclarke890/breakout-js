@@ -146,6 +146,7 @@ class Ball {
       destroyedBricks.push(brick);
     });
     state.bricks = state.bricks.filter((b) => !destroyedBricks.includes(b));
+    if (state.bricks.length === 0) state.over = true;
 
     // Periodically increase the speed based off of the amount of collisions.
     if (hasCollided) this.collisionCount++;
@@ -153,6 +154,8 @@ class Ball {
       this.speed = Math.min(this.speed + 1, this.maxSpeed);
       this.collisionCount = 0; // otherwise will infinitely speed up once it first hits 5.
     }
+
+    if (this.y > canvas.height) state.level.lifeLost = true;
   }
 
   draw() {
@@ -192,6 +195,13 @@ const levels = [
     [12, 3, true],
     [15, 14, true],
   ],
+  [
+    [4, 1, true],
+    [3, 2, true],
+    [6, 3, true],
+    [13, 3, true],
+    [1, 14, true],
+  ],
 ];
 
 const state = {
@@ -202,6 +212,10 @@ const state = {
   movement: {
     left: false,
     right: false,
+  },
+  level: {
+    lives: 3,
+    lifeLost: false,
   },
   bricks: [],
   nextLevel: 0,
@@ -265,10 +279,55 @@ function handleBricks() {
   }
 }
 
+function handleGameState() {
+  if (state.level.lifeLost) {
+    state.level.lives--;
+    state.level.lifeLost = false;
+    state.ball.x = canvas.width / 2;
+    state.ball.y = canvas.height - 80;
+    state.paddle.x = canvas.width / 2 - state.paddle.w / 2;
+    state.started = false;
+  }
+
+  if (!state.started)
+    drawText(
+      `Lives: ${state.level.lives}`,
+      "30px Arial",
+      "white",
+      canvas.width / 2 - 30,
+      30
+    );
+}
+
+function handleOver() {
+  if (state.level.lives === 0) {
+    drawText(
+      "GAME OVER",
+      "80px Arial",
+      "white",
+      canvas.width / 2 - 200,
+      canvas.height / 2 - 100
+    );
+  } else if (state.bricks.length === 0) {
+    drawText(
+      "YOU WIN!",
+      "80px Arial",
+      "white",
+      canvas.width / 2 - 200,
+      canvas.height / 2 - 100
+    );
+  }
+}
+
 (function animate() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  handlePaddle();
-  handleBall();
-  handleBricks();
-  if (!state.over) requestAnimationFrame(animate);
+  if (!state.over) {
+    handlePaddle();
+    handleBall();
+    handleBricks();
+    handleGameState();
+  } else {
+    handleOver();
+  }
+  requestAnimationFrame(animate);
 })();
