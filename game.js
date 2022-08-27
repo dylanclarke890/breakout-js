@@ -82,6 +82,7 @@ class Brick {
   draw() {
     ctx.fillStyle = "white";
     ctx.fillRect(this.x, this.y, this.w, this.h);
+    ctx.strokeRect(this.x, this.y, this.w, this.h);
   }
 }
 
@@ -238,9 +239,9 @@ window.addEventListener("keyup", (e) => {
   const level = levels[state.nextLevel++];
   state.bricks = [];
   level.forEach((brick) => {
-    const relative = brick[2];
-    const x = relative ? brick[0] * settings.bricks.w : brick[0];
-    const y = relative ? brick[1] * settings.bricks.h : brick[1];
+    const absolute = brick[2];
+    const x = absolute ? brick[0] : brick[0] * settings.bricks.w;
+    const y = absolute ? brick[1] : brick[1] * settings.bricks.h;
     state.bricks.push(new Brick(x, y));
   });
 })();
