@@ -126,25 +126,13 @@ class Ball {
     }
 
     const destroyedBricks = [];
-    state.bricks.forEach((brick, i) => {
-      if (!isCircleRectColliding(this, brick)) return;
-      if (this.x - this.r <= brick.x) {
+    state.bricks.forEach((brick) => {
+      if (isCircleRectColliding(this, brick)) {
         hasCollided = true;
-        this.trajectory.x = DIRECTION.RIGHT;
+        this.trajectory.y =
+          this.trajectory.y === DIRECTION.UP ? DIRECTION.DOWN : DIRECTION.UP;
+        destroyedBricks.push(brick);
       }
-      if (this.x + this.r >= brick.x + brick.w) {
-        hasCollided = true;
-        this.trajectory.x = DIRECTION.LEFT;
-      }
-      if (this.y - this.r <= brick.y) {
-        hasCollided = true;
-        this.trajectory.y = DIRECTION.UP;
-      }
-      if (this.y - this.r <= brick.y + brick.h) {
-        hasCollided = true;
-        this.trajectory.y = DIRECTION.DOWN;
-      }
-      destroyedBricks.push(brick);
     });
     state.bricks = state.bricks.filter((b) => !destroyedBricks.includes(b));
     if (state.bricks.length === 0) state.over = true;
