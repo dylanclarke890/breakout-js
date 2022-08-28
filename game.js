@@ -12,6 +12,30 @@ function drawText(text, font, fillStyle, x, y, maxWidth = undefined) {
   ctx.fillText(text, x, y, maxWidth);
 }
 
+function fillEllipse(x, y, w, h, fillStyle) {
+  ctx.beginPath();
+  ctx.moveTo(x, y - h / 2); // A1
+  ctx.bezierCurveTo(
+    x + w / 2,
+    y - h / 2, // C1
+    x + w / 2,
+    y + h / 2, // C2
+    x,
+    y + h / 2
+  ); // A2
+  ctx.bezierCurveTo(
+    x - w / 2,
+    y + h / 2, // C3
+    x - w / 2,
+    y - h / 2, // C4
+    x,
+    y - h / 2
+  ); // A1
+  ctx.fillStyle = fillStyle;
+  ctx.fill();
+  ctx.closePath();
+}
+
 function randUpTo(num, floor = false) {
   const res = Math.random() * num;
   return floor ? Math.floor(res) : res;
@@ -90,19 +114,40 @@ class Powerup {
   constructor(x, y, type) {
     this.x = x;
     this.y = y;
+    this.r = 15;
     this.type = type;
-    this.r = 5;
+    this.collected = false;
   }
 
   update() {
     this.y++;
+    if (!this.collected && isCircleRectColliding(this, state.paddle)) {
+      this.collected = true;
+      switch (this.type) {
+        case "EXTRALIFE":
+          state.level.lives++;
+          break;
+        case "MULTIBALLS":
+          break;
+        case "MULTIBALLS":
+          break;
+        case "MULTIBALLS":
+          break;
+      }
+    }
   }
   draw() {
-    ctx.fillStyle = "white";
+    ctx.fillStyle = "blue";
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2, true);
     ctx.fill();
-    drawText(POWERUP[type], "10px Arial", "black", this.x - 5, this.y);
+    drawText(
+      POWERUP[this.type],
+      "10px Arial",
+      "yellow",
+      this.x - 10,
+      this.y + 5
+    );
   }
 }
 
@@ -153,7 +198,7 @@ class Ball {
           this.trajectory.y === DIRECTION.UP ? DIRECTION.DOWN : DIRECTION.UP;
         destroyedBricks.push(brick);
         if (Math.random() <= settings.bricks.powerupChance) {
-          const powerupTypes = POWERUP.keys();
+          const powerupTypes = Object.keys(POWERUP);
           const randomType = powerupTypes[randUpTo(powerupTypes.length, true)];
           state.powerups.push(
             new Powerup(
@@ -196,7 +241,7 @@ const DIRECTION = {
 };
 
 const POWERUP = {
-  EXTRALIFE: "+1",
+  EXTRALIFE: "life",
   MULTIBALLS: "multi",
   NOCOLLISION: "super",
   SAFETYNET: "safe",
@@ -206,7 +251,7 @@ const settings = {
   bricks: {
     w: 40,
     h: 20,
-    powerupChance: 0.05,
+    powerupChance: 0.8,
   },
   paddle: {
     w: 80,
@@ -220,7 +265,7 @@ const state = {
   ball: new Ball({ x: "L", y: "U" }),
   started: false,
   over: false,
-  powerups: {},
+  powerups: [],
   movement: {
     left: false,
     right: false,
@@ -284,6 +329,16 @@ function handleBall() {
   state.ball.draw();
 }
 
+function handlePowerups() {
+  for (let i = 0; i < state.powerups.length; i++) {
+    state.powerups[i].update();
+    state.powerups[i].draw();
+  }
+  state.powerups = state.powerups.filter(
+    (p) => !p.collected && p.y < canvas.height
+  );
+}
+
 function handleBricks() {
   for (let i = 0; i < state.bricks.length; i++) {
     state.bricks[i].update();
@@ -338,6 +393,7 @@ function handleOver() {
     handlePaddle();
     handleBall();
     handleBricks();
+    handlePowerups();
     handleGameState();
   } else {
     handleOver();
