@@ -152,9 +152,9 @@ class Powerup {
 }
 
 class Ball {
-  constructor(trajectory) {
-    this.x = canvas.width / 2;
-    this.y = canvas.height - 80;
+  constructor(x, y, trajectory) {
+    this.x = x;
+    this.y = y;
     this.r = 10;
     this.speed = 3;
     this.startingSpeed = this.speed;
@@ -262,7 +262,7 @@ const settings = {
 
 const state = {
   paddle: new Paddle(),
-  ball: new Ball({ x: "L", y: "U" }),
+  ball: [new Ball(canvas.width / 2, canvas.height - 80, { x: "L", y: "U" })],
   started: false,
   over: false,
   powerups: [],
@@ -324,9 +324,11 @@ function handlePaddle() {
   state.paddle.draw();
 }
 
-function handleBall() {
-  state.ball.update();
-  state.ball.draw();
+function handleBalls() {
+  for (let i = 0; i < state.ball.length; i++) {
+    state.ball[i].update();
+    state.ball[i].draw();
+  }
 }
 
 function handlePowerups() {
@@ -350,8 +352,9 @@ function handleGameState() {
   if (state.level.lifeLost) {
     state.level.lives--;
     state.level.lifeLost = false;
-    state.ball.x = canvas.width / 2;
-    state.ball.y = canvas.height - 80;
+    state.ball.push(
+      new Ball(canvas.width / 2, canvas.height - 80, { x: "L", y: "U" })
+    );
     state.paddle.x = canvas.width / 2 - state.paddle.w / 2;
     state.started = false;
     state.over = state.level.lives === 0;
@@ -391,7 +394,7 @@ function handleOver() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   if (!state.over) {
     handlePaddle();
-    handleBall();
+    handleBalls();
     handleBricks();
     handlePowerups();
     handleGameState();
