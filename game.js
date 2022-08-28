@@ -58,7 +58,7 @@ class Paddle {
     const { left, right } = state.movement;
     // no movement or moving in both directions at once.
     if ((!left && !right) || (right && left)) return;
-    this.x += left ? settings.movementSpeed * -1 : settings.movementSpeed;
+    this.x += left ? settings.paddle.s * -1 : settings.paddle.s;
     if (this.x < 0) this.x = 0;
     if (this.x + this.w > canvas.width) this.x = canvas.width - this.w;
   }
@@ -172,8 +172,8 @@ const settings = {
   paddle: {
     w: 80,
     h: 20,
+    s: 20,
   },
-  movementSpeed: 10,
 };
 
 const state = {
