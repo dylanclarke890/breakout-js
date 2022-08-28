@@ -86,6 +86,26 @@ class Brick {
   }
 }
 
+class Powerup {
+  constructor(x, y, type) {
+    this.x = x;
+    this.y = y;
+    this.type = type;
+    this.r = 5;
+  }
+
+  update() {
+    this.y++;
+  }
+  draw() {
+    ctx.fillStyle = "white";
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2, true);
+    ctx.fill();
+    drawText(POWERUP[type], "10px Arial", "black", this.x - 5, this.y);
+  }
+}
+
 class Ball {
   constructor(trajectory) {
     this.x = canvas.width / 2;
@@ -132,6 +152,17 @@ class Ball {
         this.trajectory.y =
           this.trajectory.y === DIRECTION.UP ? DIRECTION.DOWN : DIRECTION.UP;
         destroyedBricks.push(brick);
+        if (Math.random() <= settings.bricks.powerupChance) {
+          const powerupTypes = POWERUP.keys();
+          const randomType = powerupTypes[randUpTo(powerupTypes.length, true)];
+          state.powerups.push(
+            new Powerup(
+              brick.x + brick.w / 2,
+              brick.y + brick.h / 2,
+              randomType
+            )
+          );
+        }
       }
     });
     state.bricks = state.bricks.filter((b) => !destroyedBricks.includes(b));
@@ -164,10 +195,18 @@ const DIRECTION = {
   RIGHT: "R",
 };
 
+const POWERUP = {
+  EXTRALIFE: "+1",
+  MULTIBALLS: "multi",
+  NOCOLLISION: "super",
+  SAFETYNET: "safe",
+};
+
 const settings = {
   bricks: {
     w: 40,
     h: 20,
+    powerupChance: 0.05,
   },
   paddle: {
     w: 80,
@@ -181,6 +220,7 @@ const state = {
   ball: new Ball({ x: "L", y: "U" }),
   started: false,
   over: false,
+  powerups: {},
   movement: {
     left: false,
     right: false,
