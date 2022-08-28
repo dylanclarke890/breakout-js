@@ -129,9 +129,9 @@ class Powerup {
           break;
         case "MULTIBALLS":
           break;
-        case "MULTIBALLS":
+        case "NOCOLLISION":
           break;
-        case "MULTIBALLS":
+        case "SAFETYNET":
           break;
       }
     }
