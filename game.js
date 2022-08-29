@@ -41,6 +41,20 @@ function randUpTo(num, floor = false) {
   return floor ? Math.floor(res) : res;
 }
 
+function randXDir() {
+  const ran = Math.random();
+  return ran > 0.5 ? DIRECTION.LEFT : DIRECTION.RIGHT;
+}
+
+function randYDir() {
+  const ran = Math.random();
+  return ran > 0.5 ? DIRECTION.UP : DIRECTION.DOWN;
+}
+
+function randTrajectory() {
+  return { x: randXDir(), y: randYDir() };
+}
+
 function isCircleRectColliding(circle, rect) {
   const distX = Math.abs(circle.x - rect.x - rect.w / 2);
   const distY = Math.abs(circle.y - rect.y - rect.h / 2);
@@ -128,6 +142,12 @@ class Powerup {
           state.level.lives++;
           break;
         case "MULTIBALLS":
+          const firstBall = state.balls[0];
+          for (let i = 0; i < 5; i++) {
+            state.balls.push(
+              new Ball(firstBall.x, firstBall.y, randTrajectory())
+            );
+          }
           break;
         case "NOCOLLISION":
           break;
@@ -198,7 +218,7 @@ class Ball {
         this.trajectory.y =
           this.trajectory.y === DIRECTION.UP ? DIRECTION.DOWN : DIRECTION.UP;
         destroyedBricks.push(brick);
-        if (Math.random() <= settings.bricks.powerupChance) {
+        if (Math.random() <= settings.powerups.chance) {
           const powerupTypes = Object.keys(POWERUP);
           const randomType = powerupTypes[randUpTo(powerupTypes.length, true)];
           state.powerups.push(
@@ -249,10 +269,14 @@ const POWERUP = {
 };
 
 const settings = {
+  powerups: {
+    safetyNetCollisionLimit: 5,
+    noCollisionFrameDuration: 100,
+    chance: 0.8,
+  },
   bricks: {
     w: 40,
     h: 20,
-    powerupChance: 0.8,
   },
   paddle: {
     w: 80,
@@ -263,7 +287,9 @@ const settings = {
 
 const state = {
   paddle: new Paddle(),
-  balls: [new Ball(canvas.width / 2, canvas.height - 80, { x: "L", y: "U" })],
+  balls: [
+    new Ball(canvas.width / 2, canvas.height - 80, { x: randXDir(), y: "U" }),
+  ],
   started: false,
   over: false,
   powerups: [],
@@ -356,7 +382,7 @@ function handleGameState() {
     state.level.lives--;
     state.level.lifeLost = false;
     state.balls.push(
-      new Ball(canvas.width / 2, canvas.height - 80, { x: "L", y: "U" })
+      new Ball(canvas.width / 2, canvas.height - 80, { x: randXDir(), y: "U" })
     );
     state.paddle.x = canvas.width / 2 - state.paddle.w / 2;
     state.started = false;
