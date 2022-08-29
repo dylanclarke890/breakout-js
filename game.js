@@ -357,6 +357,7 @@ function handleLevelSetUp() {
 }
 
 window.addEventListener("keydown", (e) => {
+  if (!state.started) return;
   switch (e.code.toLowerCase()) {
     case "arrowleft":
     case "keya":
@@ -374,6 +375,7 @@ window.addEventListener("keydown", (e) => {
 });
 
 window.addEventListener("keyup", (e) => {
+  if (!state.started) return;
   switch (e.key.toLowerCase()) {
     case "arrowleft":
     case "a":
