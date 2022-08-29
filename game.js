@@ -113,6 +113,7 @@ class Brick {
     const { w, h } = settings.bricks;
     this.w = w;
     this.h = h;
+    this.destroyed = false;
   }
 
   update() {}
@@ -235,7 +236,7 @@ class Ball {
         } else {
           this.superDuration--;
         }
-        destroyedBricks.push(brick);
+        brick.destroyed = true;
         if (Math.random() <= settings.powerups.chance) {
           const powerupTypes = Object.keys(POWERUP);
           const randomType = powerupTypes[randUpTo(powerupTypes.length, true)];
@@ -249,8 +250,6 @@ class Ball {
         }
       }
     });
-    state.bricks = state.bricks.filter((b) => !destroyedBricks.includes(b));
-    if (state.bricks.length === 0) state.level.won = true;
 
     // Periodically increase the speed based off of the amount of collisions.
     if (hasCollided) {
@@ -466,6 +465,8 @@ function handleBricks() {
     state.bricks[i].update();
     state.bricks[i].draw();
   }
+  state.bricks = state.bricks.filter((b) => !b.destroyed);
+  if (state.bricks.length === 0) state.level.won = true;
 }
 
 function handleGameState() {
