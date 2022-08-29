@@ -257,7 +257,7 @@ class Ball {
     }
 
     if (state.net.active && state.net.duration) {
-      if (this.y >= state.net.y) {
+      if (this.y + this.r >= state.net.y) {
         this.trajectory.y = DIRECTION.UP;
         state.net.duration--;
       }
@@ -327,7 +327,7 @@ const state = {
     lifeLost: false,
   },
   bricks: [],
-  net: { active: false, duration: 0, y: canvas.height - 60 },
+  net: { active: false, duration: 0, y: canvas.height - 40 },
   nextLevel: 0,
 };
 
