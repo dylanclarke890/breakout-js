@@ -142,12 +142,15 @@ class Powerup {
           state.level.lives++;
           break;
         case "MULTIBALLS":
-          const firstBall = state.balls[0];
-          for (let i = 0; i < 5; i++) {
-            state.balls.push(
-              new Ball(firstBall.x, firstBall.y, randTrajectory())
-            );
+          const itemsToAppend = [];
+          for (let i = 0; i < state.balls.length; i++) {
+            for (let j = 0; j < settings.powerups.multiAmount; j++) {
+              itemsToAppend.push(
+                new Ball(state.balls[i].x, state.balls[i].y, randTrajectory())
+              );
+            }
           }
+          state.balls.push(...itemsToAppend);
           break;
         case "NOCOLLISION":
           state.balls.forEach((v) => {
@@ -287,17 +290,18 @@ const DIRECTION = {
 };
 
 const POWERUP = {
-  EXTRALIFE: "life",
+  // EXTRALIFE: "life",
   MULTIBALLS: "multi",
-  NOCOLLISION: "super",
-  SAFETYNET: "net",
+  // NOCOLLISION: "super",
+  // SAFETYNET: "net",
 };
 
 const settings = {
   powerups: {
     safetyNetCollisionLimit: 3,
     noCollisionDuration: 3,
-    chance: 0.2,
+    multiAmount: 3,
+    chance: 0.8,
   },
   bricks: {
     w: 40,
