@@ -381,6 +381,7 @@ function handleGameState() {
   if (state.level.lifeLost) {
     state.level.lives--;
     state.level.lifeLost = false;
+    state.powerups = [];
     state.balls.push(
       new Ball(canvas.width / 2, canvas.height - 80, { x: randXDir(), y: "U" })
     );
