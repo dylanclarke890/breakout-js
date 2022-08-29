@@ -156,6 +156,8 @@ class Powerup {
           });
           break;
         case "SAFETYNET":
+          state.net.active = true;
+          state.net.duration = settings.powerups.safetyNetCollisionLimit;
           break;
       }
     }
@@ -254,6 +256,16 @@ class Ball {
       this.collisionCount = 0; // otherwise will infinitely speed up once it first hits 5.
     }
 
+    if (state.net.active && state.net.duration) {
+      if (this.y >= state.net.y) {
+        this.trajectory.y = DIRECTION.UP;
+        state.net.duration--;
+      }
+    } else {
+      state.net.duration = 0;
+      state.net.active = 0;
+    }
+
     if (this.y > canvas.height) this.outOfBounds = true;
   }
 
@@ -277,8 +289,8 @@ const DIRECTION = {
 const POWERUP = {
   // EXTRALIFE: "life",
   // MULTIBALLS: "multi",
-  NOCOLLISION: "super",
-  // SAFETYNET: "net",
+  // NOCOLLISION: "super",
+  SAFETYNET: "net",
 };
 
 const settings = {
@@ -315,6 +327,7 @@ const state = {
     lifeLost: false,
   },
   bricks: [],
+  net: { active: false, duration: 0, y: canvas.height - 60 },
   nextLevel: 0,
 };
 
@@ -378,6 +391,11 @@ function handlePowerups() {
     state.powerups[i].update();
     state.powerups[i].draw();
   }
+  if (state.net.active) {
+    ctx.fillStyle = "lightblue";
+    ctx.fillRect(0, state.net.y, canvas.width, 10);
+  }
+
   state.powerups = state.powerups.filter(
     (p) => !p.collected && p.y < canvas.height
   );
