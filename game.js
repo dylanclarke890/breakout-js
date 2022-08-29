@@ -344,15 +344,17 @@ let state = defaultState();
 
 function handleLevelSetUp() {
   const level = levels[currentLevel];
-  if (level) {
-    state.bricks = [];
-    level.forEach((brick) => {
-      const absolute = brick[2];
-      const x = absolute ? brick[0] : brick[0] * settings.bricks.w;
-      const y = absolute ? brick[1] : brick[1] * settings.bricks.h;
-      state.bricks.push(new Brick(x, y));
-    });
+  if (!level) {
+    currentLevel = 0;
+    level = currentLevel;
   }
+  state.bricks = [];
+  level.forEach((brick) => {
+    const absolute = brick[2];
+    const x = absolute ? brick[0] : brick[0] * settings.bricks.w;
+    const y = absolute ? brick[1] : brick[1] * settings.bricks.h;
+    state.bricks.push(new Brick(x, y));
+  });
 }
 
 window.addEventListener("keydown", (e) => {
