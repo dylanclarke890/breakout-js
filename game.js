@@ -287,17 +287,17 @@ const DIRECTION = {
 };
 
 const POWERUP = {
-  // EXTRALIFE: "life",
-  // MULTIBALLS: "multi",
-  // NOCOLLISION: "super",
+  EXTRALIFE: "life",
+  MULTIBALLS: "multi",
+  NOCOLLISION: "super",
   SAFETYNET: "net",
 };
 
 const settings = {
   powerups: {
-    safetyNetCollisionLimit: 5,
+    safetyNetCollisionLimit: 3,
     noCollisionDuration: 3,
-    chance: 0.8,
+    chance: 0.2,
   },
   bricks: {
     w: 40,
