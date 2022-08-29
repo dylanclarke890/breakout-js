@@ -150,6 +150,10 @@ class Powerup {
           }
           break;
         case "NOCOLLISION":
+          state.balls.forEach((v) => {
+            v.superDuration = settings.powerups.noCollisionDuration;
+            v.color = "yellow";
+          });
           break;
         case "SAFETYNET":
           break;
@@ -176,12 +180,14 @@ class Ball {
     this.x = x;
     this.y = y;
     this.r = 10;
+    this.color = "white";
     this.speed = 3;
     this.startingSpeed = this.speed;
     this.maxSpeed = 12;
     this.collisionCount = 0;
     this.trajectory = trajectory;
     this.outOfBounds = false;
+    this.superDuration = 0;
   }
 
   update() {
@@ -215,8 +221,13 @@ class Ball {
     state.bricks.forEach((brick) => {
       if (isCircleRectColliding(this, brick)) {
         hasCollided = true;
-        this.trajectory.y =
-          this.trajectory.y === DIRECTION.UP ? DIRECTION.DOWN : DIRECTION.UP;
+        if (this.superDuration <= 0) {
+          this.color = "white";
+          this.trajectory.y =
+            this.trajectory.y === DIRECTION.UP ? DIRECTION.DOWN : DIRECTION.UP;
+        } else {
+          this.superDuration--;
+        }
         destroyedBricks.push(brick);
         if (Math.random() <= settings.powerups.chance) {
           const powerupTypes = Object.keys(POWERUP);
@@ -235,7 +246,9 @@ class Ball {
     if (state.bricks.length === 0) state.over = true;
 
     // Periodically increase the speed based off of the amount of collisions.
-    if (hasCollided) this.collisionCount++;
+    if (hasCollided) {
+      this.collisionCount++;
+    }
     if (this.collisionCount > 0 && this.collisionCount % 5 === 0) {
       this.speed = Math.min(this.speed + 1, this.maxSpeed);
       this.collisionCount = 0; // otherwise will infinitely speed up once it first hits 5.
@@ -245,7 +258,7 @@ class Ball {
   }
 
   draw() {
-    ctx.fillStyle = "white";
+    ctx.fillStyle = this.color;
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2, true);
     ctx.fill();
@@ -262,16 +275,16 @@ const DIRECTION = {
 };
 
 const POWERUP = {
-  EXTRALIFE: "life",
-  MULTIBALLS: "multi",
+  // EXTRALIFE: "life",
+  // MULTIBALLS: "multi",
   NOCOLLISION: "super",
-  SAFETYNET: "safe",
+  // SAFETYNET: "net",
 };
 
 const settings = {
   powerups: {
     safetyNetCollisionLimit: 5,
-    noCollisionFrameDuration: 100,
+    noCollisionDuration: 3,
     chance: 0.8,
   },
   bricks: {
