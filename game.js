@@ -92,7 +92,6 @@ class Paddle {
   }
 
   update() {
-    if (!state.started) return;
     const { left, right } = state.movement;
     // no movement or moving in both directions at once.
     if ((!left && !right) || (right && left)) return;
@@ -196,7 +195,10 @@ class Ball {
   }
 
   update() {
-    if (!state.started) return;
+    if (!state.level.started) {
+      this.x = state.paddle.x + state.paddle.w / 2;
+      return;
+    }
     const xMovement =
       this.trajectory.x === DIRECTION.LEFT ? this.speed : -this.speed;
     const yMovement =
@@ -281,6 +283,7 @@ class Ball {
 }
 
 const [canvas, ctx] = new2dCanvas("play-area", 800, 500);
+let canvasPosition = canvas.getBoundingClientRect();
 
 const DIRECTION = {
   UP: "U",
@@ -290,10 +293,10 @@ const DIRECTION = {
 };
 
 const POWERUP = {
-  // EXTRALIFE: "life",
+  EXTRALIFE: "life",
   MULTIBALLS: "multi",
-  // NOCOLLISION: "super",
-  // SAFETYNET: "net",
+  NOCOLLISION: "super",
+  SAFETYNET: "net",
 };
 
 const settings = {
@@ -301,7 +304,7 @@ const settings = {
     safetyNetCollisionLimit: 3,
     noCollisionDuration: 3,
     multiAmount: 3,
-    chance: 0.8,
+    chance: 0.1,
   },
   bricks: {
     w: 40,
@@ -314,7 +317,7 @@ const settings = {
   },
 };
 
-const state = {
+const defaultState = () => ({
   paddle: new Paddle(),
   balls: [
     new Ball(canvas.width / 2, canvas.height - 80, { x: randXDir(), y: "U" }),
@@ -327,25 +330,29 @@ const state = {
     right: false,
   },
   level: {
+    started: false,
     lives: 3,
     lifeLost: false,
+    won: false,
   },
   bricks: [],
   net: { active: false, duration: 0, y: canvas.height - 40 },
   nextLevel: 0,
-};
+});
+const state = defaultState();
 
 window.addEventListener("keydown", (e) => {
-  switch (e.key.toLowerCase()) {
+  switch (e.code.toLowerCase()) {
     case "arrowleft":
-    case "a":
-      state.movement = { ...state.movement, left: true };
+    case "keya":
+      state.movement.left = true;
       break;
     case "arrowright":
-    case "d":
-      state.movement = { ...state.movement, right: true };
-    case " ":
-      state.started = true;
+    case "keyd":
+      state.movement.right = true;
+      break;
+    case "space":
+      state.level.started = true;
     default:
       break;
   }
@@ -355,14 +362,49 @@ window.addEventListener("keyup", (e) => {
   switch (e.key.toLowerCase()) {
     case "arrowleft":
     case "a":
-      state.movement = { ...state.movement, left: false };
+      state.movement.left = false;
       break;
     case "arrowright":
     case "d":
-      state.movement = { ...state.movement, right: false };
+      state.movement.right = false;
     default:
       break;
   }
+});
+
+const startBtn = {
+  x: canvas.width / 2 - 50,
+  y: canvas.height / 2 - 15,
+  w: 100,
+  h: 30,
+  hover: false,
+};
+
+const mouse = {
+  x: 0,
+  y: 0,
+  w: 0.1,
+  h: 0.1,
+};
+
+canvas.addEventListener("mousemove", (e) => {
+  mouse.x = e.x - canvasPosition.left;
+  mouse.y = e.y - canvasPosition.top;
+  startBtn.hover = isRectRectColliding(mouse, startBtn);
+});
+
+canvas.addEventListener("click", (e) => {
+  if (!state.started) {
+    state.started = isRectRectColliding(mouse, startBtn);
+  }
+  if (state.over && isRectRectColliding(mouse, startBtn)) {
+    state = defaultState();
+    settings = defaultSettings;
+  }
+});
+
+window.addEventListener("resize", () => {
+  canvasPosition = canvas.getBoundingClientRect();
 });
 
 (function handleLevelSetUp() {
@@ -421,11 +463,11 @@ function handleGameState() {
       new Ball(canvas.width / 2, canvas.height - 80, { x: randXDir(), y: "U" })
     );
     state.paddle.x = canvas.width / 2 - state.paddle.w / 2;
-    state.started = false;
+    state.level.started = false;
     state.over = state.level.lives === 0;
   }
 
-  if (!state.started)
+  if (!state.level.started)
     drawText(
       `Lives: ${state.level.lives}`,
       "30px Arial",
@@ -436,35 +478,35 @@ function handleGameState() {
 }
 
 function handleOver() {
-  if (state.level.lives === 0) {
-    drawText(
-      "GAME OVER",
-      "80px Arial",
-      "white",
-      canvas.width / 2 - 200,
-      canvas.height / 2 - 100
-    );
-  } else if (state.bricks.length === 0) {
-    drawText(
-      "YOU WIN!",
-      "80px Arial",
-      "white",
-      canvas.width / 2 - 200,
-      canvas.height / 2 - 100
-    );
-  }
+  drawText(
+    "GAME OVER",
+    "80px Arial",
+    "white",
+    canvas.width / 2 - 200,
+    canvas.height / 2 - 100
+  );
+}
+
+function handleLevelWon() {
+  drawText(
+    "YOU WIN!",
+    "80px Arial",
+    "white",
+    canvas.width / 2 - 200,
+    canvas.height / 2 - 100
+  );
 }
 
 (function animate() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  if (!state.over) {
+  if (state.over) handleOver();
+  else if (state.level.won) handleLevelWon();
+  else {
     handlePaddle();
     handleBalls();
     handleBricks();
     handlePowerups();
     handleGameState();
-  } else {
-    handleOver();
   }
   requestAnimationFrame(animate);
 })();
