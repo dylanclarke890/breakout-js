@@ -225,7 +225,6 @@ class Ball {
       this.trajectory.y = DIRECTION.UP;
     }
 
-    const destroyedBricks = [];
     state.bricks.forEach((brick) => {
       if (isCircleRectColliding(this, brick)) {
         hasCollided = true;
