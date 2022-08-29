@@ -161,6 +161,7 @@ class Ball {
     this.maxSpeed = 12;
     this.collisionCount = 0;
     this.trajectory = trajectory;
+    this.outOfBounds = false;
   }
 
   update() {
@@ -220,7 +221,7 @@ class Ball {
       this.collisionCount = 0; // otherwise will infinitely speed up once it first hits 5.
     }
 
-    if (this.y > canvas.height) state.level.lifeLost = true;
+    if (this.y > canvas.height) this.outOfBounds = true;
   }
 
   draw() {
@@ -262,7 +263,7 @@ const settings = {
 
 const state = {
   paddle: new Paddle(),
-  ball: [new Ball(canvas.width / 2, canvas.height - 80, { x: "L", y: "U" })],
+  balls: [new Ball(canvas.width / 2, canvas.height - 80, { x: "L", y: "U" })],
   started: false,
   over: false,
   powerups: [],
@@ -325,10 +326,12 @@ function handlePaddle() {
 }
 
 function handleBalls() {
-  for (let i = 0; i < state.ball.length; i++) {
-    state.ball[i].update();
-    state.ball[i].draw();
+  for (let i = 0; i < state.balls.length; i++) {
+    state.balls[i].update();
+    state.balls[i].draw();
   }
+  state.balls = state.balls.filter((b) => !b.outOfBounds);
+  if (state.balls.length === 0) state.level.lifeLost = true;
 }
 
 function handlePowerups() {
@@ -352,7 +355,7 @@ function handleGameState() {
   if (state.level.lifeLost) {
     state.level.lives--;
     state.level.lifeLost = false;
-    state.ball.push(
+    state.balls.push(
       new Ball(canvas.width / 2, canvas.height - 80, { x: "L", y: "U" })
     );
     state.paddle.x = canvas.width / 2 - state.paddle.w / 2;
