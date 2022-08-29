@@ -71,10 +71,10 @@ function isRectRectColliding(first, second) {
   if (!first || !second) return false;
   if (
     !(
-      first.x > second.x + second.width ||
-      first.x + first.width < second.x ||
-      first.y > second.y + second.height ||
-      first.y + first.height < second.y
+      first.x > second.x + second.w ||
+      first.x + first.w < second.x ||
+      first.y > second.y + second.h ||
+      first.y + first.h < second.y
     )
   ) {
     return true;
@@ -250,7 +250,7 @@ class Ball {
       }
     });
     state.bricks = state.bricks.filter((b) => !destroyedBricks.includes(b));
-    if (state.bricks.length === 0) state.over = true;
+    if (state.bricks.length === 0) state.level.won = true;
 
     // Periodically increase the speed based off of the amount of collisions.
     if (hasCollided) {
@@ -299,7 +299,7 @@ const POWERUP = {
   SAFETYNET: "net",
 };
 
-const settings = {
+const defaultSettings = {
   powerups: {
     safetyNetCollisionLimit: 3,
     noCollisionDuration: 3,
@@ -316,6 +316,8 @@ const settings = {
     s: 20,
   },
 };
+let settings = defaultSettings;
+let currentLevel = 0;
 
 const defaultState = () => ({
   paddle: new Paddle(),
@@ -337,9 +339,21 @@ const defaultState = () => ({
   },
   bricks: [],
   net: { active: false, duration: 0, y: canvas.height - 40 },
-  nextLevel: 0,
 });
-const state = defaultState();
+let state = defaultState();
+
+function handleLevelSetUp() {
+  const level = levels[currentLevel];
+  if (level) {
+    state.bricks = [];
+    level.forEach((brick) => {
+      const absolute = brick[2];
+      const x = absolute ? brick[0] : brick[0] * settings.bricks.w;
+      const y = absolute ? brick[1] : brick[1] * settings.bricks.h;
+      state.bricks.push(new Brick(x, y));
+    });
+  }
+}
 
 window.addEventListener("keydown", (e) => {
   switch (e.code.toLowerCase()) {
@@ -367,6 +381,10 @@ window.addEventListener("keyup", (e) => {
     case "arrowright":
     case "d":
       state.movement.right = false;
+      break;
+    case "p":
+      state.over = true;
+      break;
     default:
       break;
   }
@@ -393,11 +411,16 @@ canvas.addEventListener("mousemove", (e) => {
   startBtn.hover = isRectRectColliding(mouse, startBtn);
 });
 
-canvas.addEventListener("click", (e) => {
-  if (!state.started) {
-    state.started = isRectRectColliding(mouse, startBtn);
-  }
-  if (state.over && isRectRectColliding(mouse, startBtn)) {
+canvas.addEventListener("click", () => {
+  if (state.level.won && isRectRectColliding(mouse, startBtn)) {
+    currentLevel++;
+    state = defaultState();
+    settings = defaultSettings;
+    handleLevelSetUp();
+  } else if (!state.started && isRectRectColliding(mouse, startBtn)) {
+    handleLevelSetUp();
+    state.started = true;
+  } else if (state.over && isRectRectColliding(mouse, startBtn)) {
     state = defaultState();
     settings = defaultSettings;
   }
@@ -406,17 +429,6 @@ canvas.addEventListener("click", (e) => {
 window.addEventListener("resize", () => {
   canvasPosition = canvas.getBoundingClientRect();
 });
-
-(function handleLevelSetUp() {
-  const level = levels[state.nextLevel++];
-  state.bricks = [];
-  level.forEach((brick) => {
-    const absolute = brick[2];
-    const x = absolute ? brick[0] : brick[0] * settings.bricks.w;
-    const y = absolute ? brick[1] : brick[1] * settings.bricks.h;
-    state.bricks.push(new Brick(x, y));
-  });
-})();
 
 function handlePaddle() {
   state.paddle.update();
@@ -477,6 +489,20 @@ function handleGameState() {
     );
 }
 
+function handleStart() {
+  drawText(
+    "BREAKOUT",
+    "80px Arial",
+    "white",
+    canvas.width / 2 - 200,
+    canvas.height / 2 - 100
+  );
+  const { x, y, w, h, hover } = startBtn;
+  ctx.fillStyle = hover ? "blue" : "lightblue";
+  ctx.fillRect(x, y, w, h);
+  drawText("Start", "20px Arial", hover ? "lightblue" : "blue", x + 20, y + 20);
+}
+
 function handleOver() {
   drawText(
     "GAME OVER",
@@ -484,6 +510,16 @@ function handleOver() {
     "white",
     canvas.width / 2 - 200,
     canvas.height / 2 - 100
+  );
+  const { x, y, w, h, hover } = startBtn;
+  ctx.fillStyle = hover ? "blue" : "lightblue";
+  ctx.fillRect(x, y, w, h);
+  drawText(
+    "Restart",
+    "20px Arial",
+    hover ? "lightblue" : "blue",
+    x + 20,
+    y + 20
   );
 }
 
@@ -495,11 +531,22 @@ function handleLevelWon() {
     canvas.width / 2 - 200,
     canvas.height / 2 - 100
   );
+  const { x, y, w, h, hover } = startBtn;
+  ctx.fillStyle = hover ? "blue" : "lightblue";
+  ctx.fillRect(x, y, w, h);
+  drawText(
+    "Next Level",
+    "20px Arial",
+    hover ? "lightblue" : "blue",
+    x + 20,
+    y + 20
+  );
 }
 
 (function animate() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  if (state.over) handleOver();
+  if (!state.started) handleStart();
+  else if (state.over) handleOver();
   else if (state.level.won) handleLevelWon();
   else {
     handlePaddle();
