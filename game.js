@@ -134,7 +134,7 @@ class Powerup {
   }
 
   update() {
-    this.y++;
+    this.y += 2;
     if (!this.collected && isCircleRectColliding(this, state.paddle)) {
       this.collected = true;
       switch (this.type) {
@@ -178,6 +178,24 @@ class Powerup {
       this.y + 5
     );
   }
+}
+
+function sideCollided(a, b) {
+  const dX = a.x + a.w / 2 - (b.x + b.w / 2);
+  const dY = a.y + a.h / 2 - (b.y + b.h / 2);
+  const w = (a.w + b.w) / 2;
+  const h = (a.h + b.h) / 2;
+  const cW = w * dY;
+  const cH = h * dX;
+  let side = "none";
+  if (Math.abs(dX) <= w && Math.abs(dY) <= h) {
+    if (cW > cH) {
+      side = cW > -cH ? "bottom" : "left";
+    } else {
+      side = cW > -cH ? "right" : "top";
+    }
+  }
+  return side;
 }
 
 class Ball {
@@ -226,28 +244,51 @@ class Ball {
     }
 
     state.bricks.forEach((brick) => {
-      if (isCircleRectColliding(this, brick)) {
-        hasCollided = true;
-        if (this.superDuration <= 0) {
-          this.color = "white";
+      if (!isCircleRectColliding(this, brick)) return;
+      hasCollided = true;
+      brick.destroyed = true;
+      if (Math.random() <= settings.powerups.chance) {
+        const powerupTypes = Object.keys(POWERUP);
+        const randomType = powerupTypes[randUpTo(powerupTypes.length, true)];
+        state.powerups.push(
+          new Powerup(brick.x + brick.w / 2, brick.y + brick.h / 2, randomType)
+        );
+      }
+      if (this.superDuration > 0) {
+        this.superDuration--;
+        return;
+      }
+
+      const collisionDimensions = {
+        x: this.x - this.r,
+        y: this.y - this.r,
+        w: 2 * this.r,
+        h: 2 * this.r,
+      };
+      const side = sideCollided(brick, collisionDimensions);
+      switch (side) {
+        case "top":
+          this.trajectory.y = DIRECTION.DOWN;
+          break;
+        case "bottom":
+          this.trajectory.y = DIRECTION.UP;
+          break;
+        case "left":
+          this.trajectory.y = DIRECTION.RIGHT;
+          break;
+        case "right":
+          this.trajectory.x = DIRECTION.LEFT;
+          break;
+        default:
           this.trajectory.y =
             this.trajectory.y === DIRECTION.UP ? DIRECTION.DOWN : DIRECTION.UP;
-        } else {
-          this.superDuration--;
-        }
-        brick.destroyed = true;
-        if (Math.random() <= settings.powerups.chance) {
-          const powerupTypes = Object.keys(POWERUP);
-          const randomType = powerupTypes[randUpTo(powerupTypes.length, true)];
-          state.powerups.push(
-            new Powerup(
-              brick.x + brick.w / 2,
-              brick.y + brick.h / 2,
-              randomType
-            )
-          );
-        }
+          this.trajectory.x =
+            this.trajectory.x === DIRECTION.LEFT
+              ? DIRECTION.RIGHT
+              : DIRECTION.LEFT;
+          break;
       }
+      this.color = "white";
     });
 
     // Periodically increase the speed based off of the amount of collisions.
@@ -302,7 +343,7 @@ const defaultSettings = {
     safetyNetCollisionLimit: 3,
     noCollisionDuration: 3,
     multiAmount: 3,
-    chance: 0.1,
+    chance: 0.5,
   },
   bricks: {
     w: 40,
@@ -311,7 +352,7 @@ const defaultSettings = {
   paddle: {
     w: 80,
     h: 20,
-    s: 20,
+    s: 15,
   },
 };
 let settings = defaultSettings;
@@ -423,6 +464,7 @@ canvas.addEventListener("click", () => {
     handleLevelSetUp();
     state.started = true;
   } else if (state.over && isRectRectColliding(mouse, startBtn)) {
+    currentLevel = 0;
     state = defaultState();
     settings = defaultSettings;
   }
